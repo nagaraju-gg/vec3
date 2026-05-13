@@ -145,7 +145,7 @@ function enhanceDocHtml(html) {
 }
 
 /*
-  Kept for old bookmarks. The page now uses the individual /docs/*.md routes;
+  Kept for old bookmarks. The page now uses the individual /docs/*.html routes;
   /theory.html simply renders both markdown sources in one plain view.
 */
 async function legacyCombinedTheoryHtml() {

@@ -109,16 +109,16 @@ function markdownToHtml(markdown) {
 function markdownHtml(markdown) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     :root{color-scheme:light dark}
-    body{margin:0;padding:38px;font:40px/1.72 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171916;background:#fff}
-    article{max-width:1180px;margin:0 auto}
-    h1{margin:0 0 28px;font-size:100px;line-height:1.04;letter-spacing:0}
-    h2{margin:38px 0 16px;font-size:64px;line-height:1.18;letter-spacing:0}
-    h3,h4{margin:30px 0 12px;font-size:48px;line-height:1.28}
-    p{margin:0 0 20px}
-    ul,ol{margin:0 0 22px 30px;padding:0}
-    li{margin:8px 0}
-    hr{margin:32px 0;border:0;border-top:1px solid #daddd5}
-    code{padding:2px 5px;border-radius:5px;background:#eef2ed;font:0.92em ui-monospace,SFMono-Regular,Menlo,monospace}
+    body{margin:0;padding:32px;font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171916;background:#fff}
+    article{max-width:1000px;margin:0 auto}
+    h1{margin:0 0 12px;font-size:28px;line-height:1.2;letter-spacing:0}
+    h2{margin:20px 0 8px;font-size:22px;line-height:1.3;letter-spacing:0}
+    h3,h4{margin:16px 0 6px;font-size:18px;line-height:1.4}
+    p{margin:0 0 14px}
+    ul,ol{margin:0 0 14px 24px;padding:0}
+    li{margin:4px 0}
+    hr{margin:20px 0;border:0;border-top:1px solid #daddd5}
+    code{padding:2px 5px;border-radius:5px;background:#eef2ed;font:0.9em ui-monospace,SFMono-Regular,Menlo,monospace}
     @media(prefers-color-scheme:dark){body{background:#151a16;color:#eef3ec}hr{border-color:#303a34}code{background:#202821}}
   </style></head><body><article>${markdownToHtml(markdown)}</article></body></html>`;
 }
@@ -127,13 +127,13 @@ function enhanceDocHtml(html) {
   const css = `<style>
     :root{color-scheme:light dark}
     html{background:#fff}
-    body{box-sizing:border-box;max-width:1240px;margin:0 auto!important;padding:38px!important;background:#fff;color:#171916;font:40px/1.72 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;zoom:2}
-    h1,h1 *{font-size:100px!important;line-height:1.04!important}
-    h2,h2 *{font-size:64px!important;line-height:1.18!important}
-    h3,h3 *,h4,h4 *{font-size:48px!important;line-height:1.28!important}
-    table{width:100%;margin:22px 0 28px;border-collapse:collapse}
-    td,th{border-color:#daddd5!important;padding:10px 12px!important;vertical-align:top;font-size:36px!important;line-height:1.55!important}
-    p,p *,li,li *,div,div *,span,font,[style*="font"],[style*="font-size"]{font-size:40px!important;line-height:1.72!important}
+    body{box-sizing:border-box;max-width:1000px;margin:0 auto!important;padding:32px!important;background:#fff;color:#171916;font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+    h1,h1 *{font-size:28px!important;line-height:1.2!important;margin:0 0 12px!important}
+    h2,h2 *{font-size:22px!important;line-height:1.3!important;margin:20px 0 8px!important}
+    h3,h3 *,h4,h4 *{font-size:18px!important;line-height:1.4!important;margin:16px 0 6px!important}
+    table{width:100%;margin:14px 0 18px;border-collapse:collapse}
+    td,th{border-color:#daddd5!important;padding:6px 10px!important;vertical-align:top;font-size:14px!important;line-height:1.5!important}
+    p,p *,li,li *,div,div *,span,font,[style*="font"],[style*="font-size"]{font-size:inherit!important;line-height:inherit!important}
     math,math *,mfrac,msqrt,msup,msub,mi,mo,mn{font-size:1em!important}
     @media(prefers-color-scheme:dark){
       html,body{background:#151a16!important;color:#eef3ec!important}

@@ -30,97 +30,85 @@ function decodeXml(text) {
   return text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
 }
 
-function docxParagraphs(file) {
+function esc(text) {
+  return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+const pageStyle = `<style>
+  :root{color-scheme:light dark}
+  body{margin:0;padding:32px;font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171916;background:#fff}
+  article{max-width:1000px;margin:0 auto}
+  h1{margin:0 0 12px;font-size:28px;line-height:1.2}
+  h2{margin:20px 0 8px;font-size:22px;line-height:1.3}
+  h3,h4{margin:16px 0 6px;font-size:18px;line-height:1.4}
+  p{margin:0 0 14px;line-height:1.6}
+  ul,ol{margin:0 0 14px 24px;padding:0}
+  li{margin:4px 0}
+  table{border-collapse:collapse;margin:14px 0;width:100%}
+  td,th{border:1px solid #daddd5;padding:6px 10px;text-align:left;vertical-align:top;font-size:14px}
+  hr{margin:20px 0;border:0;border-top:1px solid #daddd5}
+  code{padding:2px 5px;border-radius:5px;background:#eef2ed;font:0.9em ui-monospace,SFMono-Regular,Menlo,monospace}
+  @media(prefers-color-scheme:dark){body{background:#151a16;color:#eef3ec}td,th{border-color:#303a34}hr{border-color:#303a34}code{background:#202821}}
+</style>`;
+
+function wrapPage(body) {
+  return `<!doctype html><html><head><meta charset="utf-8">${pageStyle}</head><body><article>${body}</article></body></html>`;
+}
+
+function docxToHtmlDirect(file) {
   return new Promise((resolve) => {
     execFile("unzip", ["-p", file, "word/document.xml"], { maxBuffer: 20 * 1024 * 1024 }, (error, xml = "") => {
-      if (error) return resolve([`Unable to load ${path.basename(file)}.`]);
-      resolve(
-        xml
-          .replace(/<w:tab\/>/g, " ")
-          .replace(/<\/w:p>/g, "\n")
-          .replace(/<[^>]+>/g, "")
-          .split("\n")
-          .map((line) => decodeXml(line).trim())
-          .filter(Boolean),
-      );
+      if (error) return resolve("");
+      let body = xml;
+      body = body.replace(/<m:oMath[^>]*>([\s\S]*?)<\/m:oMath>/g, (_, inner) => {
+        const text = inner.replace(/<[^>]+>/g, "").trim();
+        return text ? `<span class="eq">${esc(text)}</span>` : "";
+      });
+      body = body.replace(/<w:tbl[^>]*>([\s\S]*?)<\/w:tbl>/g, (_, tblXml) => {
+        const rows = [];
+        const rowRe = /<w:tr[^>]*>([\s\S]*?)<\/w:tr>/g;
+        let rm;
+        while ((rm = rowRe.exec(tblXml)) !== null) {
+          const cells = [];
+          const cellRe = /<w:tc[^>]*>([\s\S]*?)<\/w:tc>/g;
+          let cm;
+          while ((cm = cellRe.exec(rm[1])) !== null) {
+            const text = cm[1].replace(/<\/w:p>/g, " ").replace(/<[^>]+>/g, "").trim();
+            cells.push(esc(decodeXml(text)));
+          }
+          if (cells.length) rows.push(cells);
+        }
+        if (!rows.length) return "";
+        return `<table>${rows.map((r, i) => `<tr>${r.map((c) => `<${i === 0 ? "th" : "td"}>${c}</${i === 0 ? "th" : "td"}>`).join("")}</tr>`).join("")}</table>\n`;
+      });
+      let html = "";
+      const paraRe = /<w:p[^>]*>([\s\S]*?)<\/w:p>/g;
+      let pm;
+      while ((pm = paraRe.exec(body)) !== null) {
+        let text = pm[1].replace(/<[^>]+>/g, "").trim();
+        text = decodeXml(text);
+        if (!text) continue;
+        if (/^\d+(\.\d+)?\s/.test(text) || text === "Abstract") {
+          html += `<h2>${esc(text)}</h2>\n`;
+        } else {
+          html += `<p>${esc(text)}</p>\n`;
+        }
+      }
+      resolve(html);
     });
   });
-}
-
-function paragraphsToMarkdown(title, paragraphs) {
-  const body = paragraphs
-    .map((paragraph) => (/^\d+(\.\d+)?\s/.test(paragraph) || paragraph === "Abstract" ? `## ${paragraph}` : paragraph))
-    .join("\n\n");
-  return `# ${title}\n\n${body}\n`;
-}
-
-async function docMarkdown(doc) {
-  const paragraphs = await docxParagraphs(doc.file);
-  return paragraphsToMarkdown(doc.title, paragraphs);
 }
 
 function docHtml(doc) {
   return new Promise((resolve) => {
     execFile("textutil", ["-convert", "html", "-stdout", doc.file], { maxBuffer: 50 * 1024 * 1024 }, (error, html = "") => {
       if (error) {
-        docMarkdown(doc).then((markdown) => resolve(markdownHtml(markdown)));
+        docxToHtmlDirect(doc.file).then((body) => resolve(wrapPage(`<h1>${esc(doc.title)}</h1>\n${body}`)));
         return;
       }
       resolve(enhanceDocHtml(html));
     });
   });
-}
-
-function esc(text) {
-  return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-}
-
-function inlineMarkdown(text) {
-  return esc(text)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
-}
-
-function markdownToHtml(markdown) {
-  const blocks = markdown.trim().split(/\n{2,}/);
-  return blocks
-    .map((block) => {
-      const text = block.trim();
-      if (!text) return "";
-      if (/^-{3,}$/.test(text)) return "<hr>";
-      const heading = text.match(/^(#{1,4})\s+(.+)$/);
-      if (heading) {
-        const level = heading[1].length;
-        return `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
-      }
-      const lines = text.split("\n");
-      if (lines.every((line) => /^[-*]\s+/.test(line))) {
-        return `<ul>${lines.map((line) => `<li>${inlineMarkdown(line.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
-      }
-      if (lines.every((line) => /^\d+\.\s+/.test(line))) {
-        return `<ol>${lines.map((line) => `<li>${inlineMarkdown(line.replace(/^\d+\.\s+/, ""))}</li>`).join("")}</ol>`;
-      }
-      return `<p>${inlineMarkdown(text).replace(/\n/g, "<br>")}</p>`;
-    })
-    .join("\n");
-}
-
-function markdownHtml(markdown) {
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-    :root{color-scheme:light dark}
-    body{margin:0;padding:32px;font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171916;background:#fff}
-    article{max-width:1000px;margin:0 auto}
-    h1{margin:0 0 12px;font-size:28px;line-height:1.2;letter-spacing:0}
-    h2{margin:20px 0 8px;font-size:22px;line-height:1.3;letter-spacing:0}
-    h3,h4{margin:16px 0 6px;font-size:18px;line-height:1.4}
-    p{margin:0 0 14px}
-    ul,ol{margin:0 0 14px 24px;padding:0}
-    li{margin:4px 0}
-    hr{margin:20px 0;border:0;border-top:1px solid #daddd5}
-    code{padding:2px 5px;border-radius:5px;background:#eef2ed;font:0.9em ui-monospace,SFMono-Regular,Menlo,monospace}
-    @media(prefers-color-scheme:dark){body{background:#151a16;color:#eef3ec}hr{border-color:#303a34}code{background:#202821}}
-  </style></head><body><article>${markdownToHtml(markdown)}</article></body></html>`;
 }
 
 function enhanceDocHtml(html) {
@@ -132,7 +120,7 @@ function enhanceDocHtml(html) {
     h2,h2 *{font-size:22px!important;line-height:1.3!important;margin:20px 0 8px!important}
     h3,h3 *,h4,h4 *{font-size:18px!important;line-height:1.4!important;margin:16px 0 6px!important}
     table{width:100%;margin:14px 0 18px;border-collapse:collapse}
-    td,th{border-color:#daddd5!important;padding:6px 10px!important;vertical-align:top;font-size:14px!important;line-height:1.5!important}
+    td,th{border:1px solid #daddd5!important;padding:6px 10px!important;vertical-align:top;font-size:14px!important;line-height:1.5!important}
     p,p *,li,li *,div,div *,span,font,[style*="font"],[style*="font-size"]{font-size:inherit!important;line-height:inherit!important}
     math,math *,mfrac,msqrt,msup,msub,mi,mo,mn{font-size:1em!important}
     @media(prefers-color-scheme:dark){
@@ -146,14 +134,11 @@ function enhanceDocHtml(html) {
 
 /*
   Kept for old bookmarks. The page now uses the individual /docs/*.html routes;
-  /theory.html simply renders both markdown sources in one plain view.
+  /theory.html concatenates both docs in one view.
 */
 async function legacyCombinedTheoryHtml() {
-  const parts = await Promise.all(docs.map((doc) => docxParagraphs(doc.file)));
-  const body = parts
-    .map((paragraphs, docIndex) => paragraphsToMarkdown(docs[docIndex].title, paragraphs))
-    .join("\n\n---\n\n");
-  return markdownHtml(body);
+  const bodies = await Promise.all(docs.map((doc) => docxToHtmlDirect(doc.file).then((body) => `<h1>${esc(doc.title)}</h1>\n${body}`)));
+  return wrapPage(bodies.join("\n<hr>\n"));
 }
 
 const server = http.createServer((req, res) => {
@@ -169,20 +154,6 @@ const server = http.createServer((req, res) => {
     docHtml(doc).then((html) => {
       res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       res.end(html);
-    });
-    return;
-  }
-  const docMatch = url.pathname.match(/^\/docs\/([a-z0-9-]+)\.md$/);
-  if (docMatch) {
-    const doc = docs.find((item) => item.slug === docMatch[1]);
-    if (!doc) {
-      res.writeHead(404);
-      res.end("Document not found");
-      return;
-    }
-    docMarkdown(doc).then((markdown) => {
-      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      res.end(markdownHtml(markdown));
     });
     return;
   }

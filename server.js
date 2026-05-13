@@ -17,12 +17,12 @@ const docs = [
   {
     slug: "vec3",
     title: "Vec3",
-    file: "/Users/nagaraju/Downloads/Vec3.docx",
+    file: path.join(root, "Vec3.docx"),
   },
   {
     slug: "vec3-mathematics",
     title: "Vec3 Mathematics",
-    file: "/Users/nagaraju/Downloads/Vec3 Mathematics.docx",
+    file: path.join(root, "Vec3 Mathematics.docx"),
   },
 ];
 

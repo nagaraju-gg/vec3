@@ -42,16 +42,16 @@
           </div>
           <div class="docs-layout">
             <nav class="doc-list" aria-label="Vec3 source documents">
-              <button class="doc-card active" type="button" data-doc-src="/docs/vec3.html">
+              <button class="doc-card active" type="button" data-doc-src="vec3">
                 <strong>Vec3</strong>
                 <span>Primary framework notes for T, R, V interpretation.</span>
               </button>
-              <button class="doc-card" type="button" data-doc-src="/docs/vec3-mathematics.html">
+              <button class="doc-card" type="button" data-doc-src="vec3-mathematics">
                 <strong>Vec3 Mathematics</strong>
                 <span>Mathematical companion notes for geometry and calculations.</span>
               </button>
             </nav>
-            <iframe id="docFrame" title="Vec3 document" src="/docs/vec3.html"></iframe>
+            <div id="docContainer" class="doc-container"></div>
           </div>
         </article>
       </section>
@@ -144,6 +144,8 @@
     </main>
 
     <button id="themeBtn" class="theme-toggle" type="button" aria-label="Switch to dark theme">☾</button>
+    <script src="/vendor/jszip.min.js"></script>
+    <script src="/vendor/docx-preview.min.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

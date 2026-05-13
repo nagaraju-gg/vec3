@@ -146,7 +146,7 @@ const els = {
   demoIntro: document.querySelector("#demoIntro"),
   theoryView: document.querySelector("#theoryView"),
   workbenchView: document.querySelector("#workbenchView"),
-  docFrame: document.querySelector("#docFrame"),
+  docContainer: document.querySelector("#docContainer"),
   inputTitle: document.querySelector("#inputTitle"),
   demoPicker: document.querySelector("#demoPicker"),
   inputActions: document.querySelector(".input-actions"),
@@ -928,17 +928,33 @@ els.addBtn.addEventListener("click", addInput);
 els.removeBtn.addEventListener("click", removeInput);
 els.resetBtn.addEventListener("click", resetTool);
 
+function loadDoc(slug) {
+  els.docContainer.innerHTML = "<p style='color:var(--muted)'>Loading…</p>";
+  fetch("/raw/" + slug)
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load");
+      return res.arrayBuffer();
+    })
+    .then((buffer) => docx.renderAsync(buffer, els.docContainer))
+    .catch(() => {
+      els.docContainer.innerHTML = "<p>Unable to load document.</p>";
+    });
+}
+
 document.addEventListener("click", (event) => {
   const doc = event.target.closest("[data-doc-src]");
   const mode = event.target.closest("[data-mode-link]");
   if (doc) {
-    els.docFrame.src = doc.dataset.docSrc;
+    const slug = doc.dataset.docSrc;
+    loadDoc(slug);
     document.querySelectorAll("[data-doc-src]").forEach((button) => {
       button.classList.toggle("active", button === doc);
     });
   }
   if (mode) setMode(mode.dataset.modeLink);
 });
+
+loadDoc("vec3");
 
 els.cube.addEventListener("pointerdown", (event) => {
   state.cube.dragging = true;

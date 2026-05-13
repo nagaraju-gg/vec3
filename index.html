@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vec3 Workbench</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Vec3(T, R, V)</p>
+          <h1>Vec3 Workbench</h1>
+        </div>
+        <div class="topbar-actions">
+          <nav class="tabs" aria-label="View switcher">
+            <button id="theoryTab" class="tab" type="button">Docs</button>
+            <button id="toolTab" class="tab active" type="button">Tool</button>
+            <button id="demoTab" class="tab" type="button">Demo</button>
+          </nav>
+        </div>
+      </header>
+
+      <section id="toolIntro" class="mode-copy" hidden>
+        <strong>Tool view</strong>
+        <span>Edit up to three states. The cube, projections, regions, and relations update live.</span>
+      </section>
+
+      <section id="demoIntro" class="mode-copy" hidden>
+        <strong>Demo view</strong>
+        <span>Readonly text cases with simulated Vec3 values and interpretation for each result.</span>
+      </section>
+
+      <section id="theoryView" class="theory-view" hidden>
+        <article class="panel theory-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Source docs</p>
+              <h2>Docs</h2>
+            </div>
+          </div>
+          <div class="docs-layout">
+            <nav class="doc-list" aria-label="Vec3 source documents">
+              <button class="doc-card active" type="button" data-doc-src="/docs/vec3.html">
+                <strong>Vec3</strong>
+                <span>Primary framework notes for T, R, V interpretation.</span>
+              </button>
+              <button class="doc-card" type="button" data-doc-src="/docs/vec3-mathematics.html">
+                <strong>Vec3 Mathematics</strong>
+                <span>Mathematical companion notes for geometry and calculations.</span>
+              </button>
+            </nav>
+            <iframe id="docFrame" title="Vec3 document" src="/docs/vec3.html"></iframe>
+          </div>
+        </article>
+      </section>
+
+      <section id="workbenchView" class="layout">
+        <aside class="panel input-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Inputs</p>
+              <h2 id="inputTitle">TRV presets</h2>
+            </div>
+          </div>
+          <div id="demoPicker" class="demo-picker" aria-label="Demo use cases" hidden></div>
+          <div class="input-actions">
+            <button id="addBtn" class="icon-btn" type="button">Add Input</button>
+            <button id="removeBtn" class="icon-btn" type="button">Remove</button>
+            <button id="resetBtn" class="icon-btn" type="button" title="Reset presets">Reset</button>
+          </div>
+          <div id="inputStack" class="input-stack"></div>
+        </aside>
+
+        <section class="main-grid">
+          <article class="panel cube-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Geometry</p>
+                <h2>Rotatable cube</h2>
+              </div>
+              <div class="geometry-actions">
+                <button id="addVectorsToggle" class="toggle-btn" type="button" aria-pressed="false">Add vectors</button>
+                <span id="cubeHint" class="chip">Drag cube</span>
+              </div>
+            </div>
+            <canvas id="cubeCanvas" width="900" height="640" aria-label="Rotatable Vec3 cube"></canvas>
+          </article>
+
+          <article class="panel summary-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Current state</p>
+                <h2>Readout</h2>
+              </div>
+              <span id="activeChip" class="chip">A</span>
+            </div>
+            <div id="stateReadout" class="readout-grid"></div>
+            <div id="interpretation" class="interpretation"></div>
+          </article>
+
+          <article class="panel pair-summary-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Set geometry</p>
+                <h2>Contrast summary</h2>
+              </div>
+            </div>
+            <div id="pairSummary" class="pair-summary"></div>
+          </article>
+
+          <article class="panel projections-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Every projection</p>
+                <h2>Planes</h2>
+              </div>
+            </div>
+            <div id="projectionGrid" class="projection-grid"></div>
+          </article>
+
+          <article class="panel relations-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Relations</p>
+                <h2>Relations + topology</h2>
+              </div>
+            </div>
+            <div id="relationsGrid" class="relations-grid"></div>
+          </article>
+
+          <article class="panel math-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Math inventory</p>
+                <h2>What it indicates</h2>
+              </div>
+            </div>
+            <div id="mathInventory" class="math-list"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <button id="themeBtn" class="theme-toggle" type="button" aria-label="Switch to dark theme">☾</button>
+    <script src="./app.js"></script>
+  </body>
+</html>
